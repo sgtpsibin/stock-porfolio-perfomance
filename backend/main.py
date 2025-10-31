@@ -377,9 +377,6 @@ def set_default_portfolio(portfolio: Portfolio):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving default portfolio: {str(e)}")
 
-# Vercel serverless handler
-handler = app
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
