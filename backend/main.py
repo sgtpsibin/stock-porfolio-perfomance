@@ -1,3 +1,14 @@
+import os
+import sys
+
+# Fix for Vercel serverless: vnstock tries to create cache in home directory
+# Vercel only allows writes to /tmp directory
+if os.environ.get('VERCEL'):
+    os.environ['HOME'] = '/tmp'
+    os.environ['VNSTOCK_CACHE_DIR'] = '/tmp/.vnstock'
+    # Create cache directory if it doesn't exist
+    os.makedirs('/tmp/.vnstock', exist_ok=True)
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,7 +17,6 @@ from datetime import datetime, timedelta
 import pandas as pd
 from vnstock import Vnstock
 import json
-import os
 
 app = FastAPI(title="Stock Portfolio Performance API")
 
@@ -34,7 +44,8 @@ app.add_middleware(
 stock = Vnstock().stock(symbol='VNI', source='VCI')
 
 # Portfolio storage file
-PORTFOLIO_FILE = "default_portfolio.json"
+# Use /tmp directory on Vercel (only writable location in serverless)
+PORTFOLIO_FILE = "/tmp/default_portfolio.json" if os.environ.get('VERCEL') else "default_portfolio.json"
 
 # Default portfolio configuration
 DEFAULT_PORTFOLIO = {
