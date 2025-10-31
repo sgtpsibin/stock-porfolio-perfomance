@@ -13,6 +13,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState(30);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
 
   const periods = [
     { label: "1 Week", days: 7 },
@@ -20,6 +22,15 @@ export default function Home() {
     { label: "3 Months", days: 90 },
     { label: "6 Months", days: 180 },
     { label: "1 Year", days: 365 },
+    { label: "2 Years", days: 730 },
+    { label: "3 Years", days: 1095 },
+    { label: "4 Years", days: 1460 },
+    { label: "5 Years", days: 1825 },
+    { label: "6 Years", days: 2190 },
+    { label: "7 Years", days: 2555 },
+    { label: "8 Years", days: 2920 },
+    { label: "9 Years", days: 3285 },
+    { label: "10 Years", days: 3650 },
   ];
 
   useEffect(() => {
@@ -43,13 +54,31 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Cancel previous request if it exists
+    if (abortController) {
+      abortController.abort();
+    }
+
     // Fetch performance when portfolio or period changes
     if (portfolio) {
-      fetchPerformance(portfolio, selectedPeriod);
+      const controller = new AbortController();
+      setAbortController(controller);
+      fetchPerformance(portfolio, selectedPeriod, controller.signal);
     }
+
+    // Cleanup function to abort request on unmount
+    return () => {
+      if (abortController) {
+        abortController.abort();
+      }
+    };
   }, [portfolio, selectedPeriod]);
 
-  const fetchPerformance = async (portfolio: Portfolio, days: number) => {
+  const fetchPerformance = async (
+    portfolio: Portfolio,
+    days: number,
+    signal: AbortSignal
+  ) => {
     setLoading(true);
     setError(null);
 
@@ -64,6 +93,7 @@ export default function Home() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(portfolio),
+          signal, // Pass the abort signal to fetch
         }
       );
 
@@ -73,9 +103,14 @@ export default function Home() {
 
       const data = await response.json();
       setPerformanceData(data);
+      setLoading(false);
     } catch (err) {
+      // Don't set error or loading state if request was aborted
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log("Request was cancelled");
+        return;
+      }
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
       setLoading(false);
     }
   };

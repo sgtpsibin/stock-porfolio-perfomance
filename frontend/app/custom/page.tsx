@@ -10,8 +10,18 @@ export default function CustomPage() {
   const [performanceData, setPerformanceData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
 
   const handlePortfolioSubmit = async (portfolio: any, days: number) => {
+    // Cancel previous request if it exists
+    if (abortController) {
+      abortController.abort();
+    }
+
+    const controller = new AbortController();
+    setAbortController(controller);
+
     setLoading(true);
     setError(null);
 
@@ -26,6 +36,7 @@ export default function CustomPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(portfolio),
+          signal: controller.signal, // Pass the abort signal
         }
       );
 
@@ -35,9 +46,14 @@ export default function CustomPage() {
 
       const data = await response.json();
       setPerformanceData(data);
+      setLoading(false);
     } catch (err) {
+      // Don't set error or loading state if request was aborted
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log("Request was cancelled");
+        return;
+      }
       setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
       setLoading(false);
     }
   };

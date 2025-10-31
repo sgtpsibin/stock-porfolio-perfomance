@@ -80,7 +80,16 @@ export default function PortfolioForm({
             <option value={30}>Last 30 days</option>
             <option value={90}>Last 90 days</option>
             <option value={180}>Last 6 months</option>
-            <option value={365}>Last year</option>
+            <option value={365}>Last 1 year</option>
+            <option value={730}>Last 2 years</option>
+            <option value={1095}>Last 3 years</option>
+            <option value={1460}>Last 4 years</option>
+            <option value={1825}>Last 5 years</option>
+            <option value={2190}>Last 6 years</option>
+            <option value={2555}>Last 7 years</option>
+            <option value={2920}>Last 8 years</option>
+            <option value={3285}>Last 9 years</option>
+            <option value={3650}>Last 10 years</option>
           </select>
         </div>
 
